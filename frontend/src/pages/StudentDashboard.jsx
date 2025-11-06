@@ -18,11 +18,24 @@ export default function StudentDashboard() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [data, setData] = useState(null);
+  const [students, setStudents] = useState([]); // 👈 Added
 
   useEffect(() => {
     if (!id) return;
     getJSON(`/student/dashboard/${id}`)
-      .then((res) => setData(res))
+      .then(async (res) => {
+        setData(res);
+
+        // 🧠 If student is promoted to admin, load all students list
+        if (res.student?.role === "admin") {
+          try {
+            const all = await getJSON("/admin/students");
+            setStudents(all);
+          } catch (err) {
+            console.error("Failed to load all students:", err);
+          }
+        }
+      })
       .catch((err) => console.error("Dashboard fetch error:", err));
   }, [id]);
 
@@ -153,7 +166,7 @@ export default function StudentDashboard() {
             </div>
           </div>
 
-          {/* NEW SECTIONS */}
+          {/* 🌟 Daily Motivation */}
           <div style={cardStyle}>
             <h2>🌟 Daily Motivation</h2>
             <p style={{ fontStyle: "italic", color: "#555" }}>
@@ -161,29 +174,30 @@ export default function StudentDashboard() {
             </p>
             <p style={{ textAlign: "right", color: "#888" }}>– Robert Collier</p>
           </div>
+
           {/* 🔥 Study Streak Tracker */}
-<div style={cardStyle}>
-  <h2>🔥 Study Streak</h2>
-  <p>You’ve studied <b>6 consecutive days</b> this week!</p>
-  <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
-    {Array.from({ length: 7 }).map((_, i) => (
-      <div
-        key={i}
-        style={{
-          width: 24,
-          height: 24,
-          borderRadius: "50%",
-          background: i < 6 ? "#4facfe" : "#ccc",
-        }}
-      ></div>
-    ))}
-  </div>
-  <p style={{ fontSize: 12, color: "#777", marginTop: 6 }}>
-    Keep your streak alive for rewards!
-  </p>
-</div>
+          <div style={cardStyle}>
+            <h2>🔥 Study Streak</h2>
+            <p>You’ve studied <b>6 consecutive days</b> this week!</p>
+            <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
+              {Array.from({ length: 7 }).map((_, i) => (
+                <div
+                  key={i}
+                  style={{
+                    width: 24,
+                    height: 24,
+                    borderRadius: "50%",
+                    background: i < 6 ? "#4facfe" : "#ccc",
+                  }}
+                ></div>
+              ))}
+            </div>
+            <p style={{ fontSize: 12, color: "#777", marginTop: 6 }}>
+              Keep your streak alive for rewards!
+            </p>
+          </div>
 
-
+          {/* Attendance Overview */}
           <div style={cardStyle}>
             <h2>📅 Attendance Overview</h2>
             <p>Total Attendance: <b>88%</b></p>
@@ -201,72 +215,106 @@ export default function StudentDashboard() {
               Keep attendance above 85% for exam eligibility.
             </p>
           </div>
+
           {/* 🧾 Assignment Tracker */}
-<div style={cardStyle}>
-  <h2>🧾 Assignment Tracker</h2>
-  <table style={{ width: "100%", borderCollapse: "collapse" }}>
-    <thead>
-      <tr style={{ background: "#eef2ff" }}>
-        <th>Subject</th>
-        <th>Task</th>
-        <th>Due Date</th>
-        <th>Status</th>
-      </tr>
-    </thead>
-    <tbody>
-      {[
-        { subject: "ML", task: "Project Report", due: "10 Nov", status: "✅ Submitted" },
-        { subject: "DBMS", task: "ER Diagram", due: "14 Nov", status: "⚠️ Pending" },
-        { subject: "Cloud", task: "Lab Manual", due: "18 Nov", status: "🕒 In Progress" },
-      ].map((a, i) => (
-        <tr key={i}>
-          <td>{a.subject}</td>
-          <td>{a.task}</td>
-          <td>{a.due}</td>
-          <td style={{
-            color:
-              a.status.includes("✅") ? "green" :
-              a.status.includes("⚠️") ? "#e67e22" : "#3498db",
-            fontWeight: 600
-          }}>{a.status}</td>
-        </tr>
-      ))}
-    </tbody>
-  </table>
-</div>
+          <div style={cardStyle}>
+            <h2>🧾 Assignment Tracker</h2>
+            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+              <thead>
+                <tr style={{ background: "#eef2ff" }}>
+                  <th>Subject</th>
+                  <th>Task</th>
+                  <th>Due Date</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {[
+                  { subject: "ML", task: "Project Report", due: "10 Nov", status: "✅ Submitted" },
+                  { subject: "DBMS", task: "ER Diagram", due: "14 Nov", status: "⚠️ Pending" },
+                  { subject: "Cloud", task: "Lab Manual", due: "18 Nov", status: "🕒 In Progress" },
+                ].map((a, i) => (
+                  <tr key={i}>
+                    <td>{a.subject}</td>
+                    <td>{a.task}</td>
+                    <td>{a.due}</td>
+                    <td style={{
+                      color:
+                        a.status.includes("✅") ? "green" :
+                        a.status.includes("⚠️") ? "#e67e22" : "#3498db",
+                      fontWeight: 600
+                    }}>{a.status}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
 
           {/* 🎯 Career & Placement Tracker */}
-<div style={cardStyle}>
-  <h2>🎯 Career & Placement Tracker</h2>
-  <p><b>Internship Status:</b> Applied for “AI Research Intern” at Google</p>
-  <p><b>Resume Score:</b> 82 / 100</p>
-  <p><b>Mock Interview:</b> Scheduled on 10 Nov 2025</p>
-  <div style={{ background: "#eee", borderRadius: 10, height: 15 }}>
-    <div
-      style={{
-        width: "82%",
-        height: "100%",
-        background: "linear-gradient(90deg,#00b09b,#96c93d)",
-        borderRadius: 10,
-      }}
-    ></div>
-  </div>
-  <p style={{ fontSize: 12, color: "#777", marginTop: 6 }}>
-    Great progress! Keep applying to more roles to reach 100%.
-  </p>
-</div>
-{/* 🤖 AI Learning Recommendations */}
-<div style={cardStyle}>
-  <h2>🤖 Smart AI Recommendations</h2>
-  <ul>
-    <li>Enroll in “Advanced Data Structures” to boost algorithmic skills.</li>
-    <li>Practice 2 LeetCode problems daily for placement prep.</li>
-    <li>Join the “AI Ethics” seminar next week.</li>
-  </ul>
-</div>
+          <div style={cardStyle}>
+            <h2>🎯 Career & Placement Tracker</h2>
+            <p><b>Internship Status:</b> Applied for “AI Research Intern” at Google</p>
+            <p><b>Resume Score:</b> 82 / 100</p>
+            <p><b>Mock Interview:</b> Scheduled on 10 Nov 2025</p>
+            <div style={{ background: "#eee", borderRadius: 10, height: 15 }}>
+              <div
+                style={{
+                  width: "82%",
+                  height: "100%",
+                  background: "linear-gradient(90deg,#00b09b,#96c93d)",
+                  borderRadius: 10,
+                }}
+              ></div>
+            </div>
+            <p style={{ fontSize: 12, color: "#777", marginTop: 6 }}>
+              Great progress! Keep applying to more roles to reach 100%.
+            </p>
+          </div>
 
+          {/* 🤖 AI Learning Recommendations */}
+          <div style={cardStyle}>
+            <h2>🤖 Smart AI Recommendations</h2>
+            <ul>
+              <li>Enroll in “Advanced Data Structures” to boost algorithmic skills.</li>
+              <li>Practice 2 LeetCode problems daily for placement prep.</li>
+              <li>Join the “AI Ethics” seminar next week.</li>
+            </ul>
+          </div>
 
+          {/* 👥 All Students Overview — visible only to admins */}
+          {student.role === "admin" && (
+            <div style={cardStyle}>
+              <h2>👥 All Students Overview</h2>
+              {students.length === 0 ? (
+                <p>No student records found.</p>
+              ) : (
+                <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                  <thead>
+                    <tr style={{ background: "#eef2ff" }}>
+                      <th>ID</th>
+                      <th>Name</th>
+                      <th>Department</th>
+                      <th>Semester</th>
+                      <th>CGPA</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {students.map((s) => (
+                      <tr key={s.id}>
+                        <td>{s.id}</td>
+                        <td>{s.name}</td>
+                        <td>{s.department}</td>
+                        <td>{s.semester}</td>
+                        <td>{s.cgpa}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          )}
 
+          {/* 🎤 Upcoming Events */}
           <div style={cardStyle}>
             <h2>🎤 Upcoming Events</h2>
             <ul>
@@ -276,7 +324,6 @@ export default function StudentDashboard() {
             </ul>
           </div>
         </div>
-        
 
         {/* RIGHT SIDE (unchanged) */}
         <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
@@ -447,4 +494,3 @@ const cardStyle = {
   padding: 16,
   boxShadow: "0 6px 18px rgba(0,0,0,0.06)",
 };
-

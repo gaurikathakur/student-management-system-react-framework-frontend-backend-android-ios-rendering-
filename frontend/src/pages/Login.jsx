@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { postJSON } from "../api.js";
+import Swal from "sweetalert2";
 
 export default function Login() {
   const [username, setUsername] = useState("");
@@ -11,18 +12,18 @@ export default function Login() {
   const [speaking, setSpeaking] = useState(false);
   const nav = useNavigate();
 
-  // 🎤 Define speak() function FIRST
-  function speak(text) {
-    if (!voiceEnabled) return;
-    speechSynthesis.cancel(); // stop previous speech
+  // 🎤 Define speak function
+  const speak = (text) => {
+    if (!voiceEnabled || !window.speechSynthesis) return;
+    window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.rate = 1;
     utterance.pitch = 1;
     utterance.volume = 1;
     utterance.onstart = () => setSpeaking(true);
     utterance.onend = () => setSpeaking(false);
-    speechSynthesis.speak(utterance);
-  }
+    window.speechSynthesis.speak(utterance);
+  };
 
   // 👋 Initial greeting
   useEffect(() => {
@@ -32,27 +33,34 @@ export default function Login() {
   // 🤖 Smart username listener
   useEffect(() => {
     const trimmed = username.trim();
-    speechSynthesis.cancel();
+    window.speechSynthesis.cancel();
 
     if (trimmed === "") {
-      speak("Oh, you're entering a new name. Let’s see who’s logging in.");
+      speak("Oh, you're entering a new name. Let's see who it is!");
       return;
     }
 
     const delay = setTimeout(() => {
       speak(`Hi ${trimmed}. Please enter your password to log in.`);
-    }, 800);
+    }, 1000);
 
     return () => clearTimeout(delay);
   }, [username]);
 
+  // 🧠 Form Submit
   async function submit(e) {
     e.preventDefault();
+
     try {
       const res = await postJSON("/student/login", { username, password });
 
       if (res.error) {
-        alert(res.error || "Login failed");
+        Swal.fire({
+          icon: "error",
+          title: "Login Failed 😢",
+          text: res.error || "Invalid username or password.",
+          confirmButtonColor: "#6246ea",
+        });
         speak("Login failed. Please check your credentials.");
         return;
       }
@@ -66,11 +74,25 @@ export default function Login() {
       if (user?.id) localStorage.setItem("studentId", user.id);
 
       speak(`Welcome back ${user.name}. Redirecting to your dashboard.`);
-      if (user.role === "admin") nav("/admin");
-      else nav(`/student/${user.id}`);
+      Swal.fire({
+        icon: "success",
+        title: `Welcome, ${user.name}! 🎉`,
+        text: "Redirecting to your dashboard...",
+        timer: 2000,
+        showConfirmButton: false,
+      });
+
+      setTimeout(() => {
+        if (user.role === "admin") nav("/admin");
+        else nav(`/student/${user.id}`);
+      }, 2000);
     } catch (err) {
       console.error(err);
-      alert("Unable to connect to server. Please try again later.");
+      Swal.fire({
+        icon: "error",
+        title: "Server Error",
+        text: "Unable to connect. Please try again later.",
+      });
       speak("Unable to connect to the server right now.");
     }
   }
@@ -207,10 +229,7 @@ export default function Login() {
               />{" "}
               Remember Me
             </label>
-            <a
-              href="/forgot-password"
-              style={{ color: "#fff", textDecoration: "underline" }}
-            >
+            <a href="/forgot-password" style={{ color: "#fff", textDecoration: "underline" }}>
               Forgot Password?
             </a>
           </div>
