@@ -2,6 +2,8 @@ import AIChatHelp from "../components/AIChatHelp.jsx";
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { getJSON } from "../api.js";
+import Swal from "sweetalert2";
+
 import {
   LineChart,
   Line,
@@ -13,20 +15,220 @@ import {
   BarChart,
   Bar,
 } from "recharts";
-
 export default function StudentDashboard() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [data, setData] = useState(null);
-  const [students, setStudents] = useState([]); // 👈 Added
+  const [students, setStudents] = useState([]);
 
+  // ✅ Move these functions above useEffect
+  const handleSemesterClick = (sem) => {
+  const marksData = {
+    "Sem 1": [
+      { subject: "Maths 🧮", marks: 82 },
+      { subject: "Programming 💻", marks: 88 },
+      { subject: "DBMS 🗃️", marks: 76 },
+      { subject: "OS ⚙️", marks: 81 },
+    ],
+    "Sem 2": [
+      { subject: "AI 🤖", marks: 84 },
+      { subject: "ML 🧠", marks: 87 },
+      { subject: "Networks 🌐", marks: 80 },
+      { subject: "DSA 📊", marks: 83 },
+    ],
+    "Sem 3": [
+      { subject: "Cloud ☁️", marks: 86 },
+      { subject: "Big Data 📈", marks: 82 },
+      { subject: "Cybersecurity 🔐", marks: 78 },
+      { subject: "IoT 🌍", marks: 85 },
+    ],
+    "Sem 4": [
+      { subject: "Deep Learning 🧩", marks: 89 },
+      { subject: "NLP 💬", marks: 84 },
+      { subject: "Data Visualization 📊", marks: 88 },
+      { subject: "Capstone Project 🎓", marks: 91 },
+    ],
+  };
+
+  if (!marksData[sem]) {
+    Swal.fire({
+      title: "Data not available",
+      text: `No detailed marks found for ${sem}.`,
+      icon: "warning",
+      confirmButtonColor: "#f39c12",
+    });
+    return;
+  }
+
+  const details = marksData[sem]
+    .map(
+      (m) =>
+        `<div style="padding:6px 0;border-bottom:1px solid #ddd;"><b>${m.subject}</b> – ${m.marks}%</div>`
+    )
+    .join("");
+
+  Swal.fire({
+    title: `${sem} Performance`,
+    html: `
+      <div style="
+        text-align:left;
+        font-size:15px;
+        background:linear-gradient(135deg,#e3f2fd,#ffffff);
+        padding:15px;
+        border-radius:12px;
+        box-shadow:inset 0 0 10px rgba(0,0,0,0.1);
+      ">
+        ${details}
+      </div>
+      <p style="font-size:13px;color:#555;margin-top:10px;">
+        🧠 This breakdown helps you analyze your strongest and weakest subjects.
+      </p>
+    `,
+    showClass: {
+      popup: "animate__animated animate__fadeInDown",
+    },
+    hideClass: {
+      popup: "animate__animated animate__fadeOutUp",
+    },
+    background: "#fdfdfd",
+    iconHtml: "📊",
+    confirmButtonColor: "#4b6cb7",
+    confirmButtonText: "Got it!",
+  });
+};
+
+
+  const handleAttendanceHover = () => {
+  const attendance = [
+    { date: "Oct 1", present: true },
+    { date: "Oct 2", present: false },
+    { date: "Oct 3", present: true },
+    { date: "Oct 4", present: true },
+    { date: "Oct 5", present: false },
+    { date: "Oct 6", present: true },
+    { date: "Oct 7", present: true },
+  ];
+
+  const present = attendance.filter((a) => a.present).length;
+  const total = attendance.length;
+  const percentage = Math.round((present / total) * 100);
+
+  const details = attendance
+    .map(
+      (a) => `
+        <div style="
+          display:flex;
+          justify-content:space-between;
+          padding:6px 0;
+          border-bottom:1px solid #ddd;
+        ">
+          <span style="font-weight:500;">${a.date}</span>
+          <span style="color:${a.present ? '#2ecc71' : '#e74c3c'};">
+            ${a.present ? '✅ Present' : '❌ Absent'}
+          </span>
+        </div>
+      `
+    )
+    .join("");
+
+  Swal.fire({
+    title: `📅 Attendance Breakdown`,
+    html: `
+      <div style="
+        background: linear-gradient(135deg, #f0f7ff, #ffffff);
+        border-radius: 12px;
+        padding: 15px;
+        text-align: left;
+        font-size: 15px;
+        box-shadow: inset 0 0 10px rgba(0,0,0,0.1);
+      ">
+        ${details}
+        <div style="margin-top:10px;padding-top:10px;border-top:1px solid #ccc;">
+          <b>Total Present:</b> ${present}/${total}<br/>
+          <b>Attendance Percentage:</b> ${percentage}%
+        </div>
+      </div>
+      <p style="font-size:13px;color:#555;margin-top:10px;">
+        🧭 Keep maintaining 85%+ attendance to stay exam eligible!
+      </p>
+    `,
+    background: "#fdfdfd",
+    confirmButtonText: "Close",
+    confirmButtonColor: "#4b6cb7",
+    showClass: {
+      popup: "animate__animated animate__fadeInUp",
+    },
+    hideClass: {
+      popup: "animate__animated animate__fadeOutDown",
+    },
+  });
+};
+const handleLibraryHover = () => {
+  const books = [
+    { title: "Deep Learning with Python", issue: "Sep 2", return: "Sep 25", fine: "₹0" },
+    { title: "Data Structures in C", issue: "Oct 1", return: "Oct 15", fine: "₹20" },
+  ];
+
+  const details = books
+    .map(
+      (b) => `
+        <div style="padding:6px 0;border-bottom:1px solid #eee;">
+          <b>📖 ${b.title}</b><br/>
+          <span style="color:#555;">Issue: ${b.issue} • Return: ${b.return}</span><br/>
+          <span style="color:${b.fine !== "₹0" ? "#e74c3c" : "#27ae60"};">Fine: ${b.fine}</span>
+        </div>`
+    )
+    .join("");
+
+  Swal.fire({
+    title: "📚 Library Record Details",
+    html: `<div style="text-align:left;padding:10px;">${details}</div>`,
+    confirmButtonColor: "#4b6cb7",
+    background: "#fff",
+    showClass: { popup: "animate__animated animate__fadeInUp" },
+    hideClass: { popup: "animate__animated animate__fadeOutDown" },
+  });
+};
+
+// 🧾 ASSIGNMENT HOVER
+const handleAssignmentHover = () => {
+  const tasks = [
+    { subject: "ML", task: "Project Report", due: "10 Nov", status: "✅ Submitted" },
+    { subject: "DBMS", task: "ER Diagram", due: "14 Nov", status: "⚠️ Pending" },
+    { subject: "Cloud", task: "Lab Manual", due: "18 Nov", status: "🕒 In Progress" },
+  ];
+
+  const details = tasks
+    .map(
+      (t) => `
+      <div style="padding:6px 0;border-bottom:1px solid #eee;">
+        <b>${t.subject}:</b> ${t.task}<br/>
+        <span style="color:#555;">Due: ${t.due}</span><br/>
+        <span style="font-weight:600;color:
+          ${t.status.includes("✅") ? "#27ae60" :
+            t.status.includes("⚠️") ? "#e67e22" : "#2980b9"};">
+          ${t.status}
+        </span>
+      </div>`
+    )
+    .join("");
+
+  Swal.fire({
+    title: "🧾 Assignment Tracker Details",
+    html: `<div style="text-align:left;padding:10px;">${details}</div>`,
+    confirmButtonColor: "#4b6cb7",
+    background: "#fff",
+    showClass: { popup: "animate__animated animate__fadeInUp" },
+    hideClass: { popup: "animate__animated animate__fadeOutDown" },
+  });
+};
+  // ✅ Only one useEffect needed
   useEffect(() => {
     if (!id) return;
     getJSON(`/student/dashboard/${id}`)
       .then(async (res) => {
         setData(res);
 
-        // 🧠 If student is promoted to admin, load all students list
         if (res.student?.role === "admin") {
           try {
             const all = await getJSON("/admin/students");
@@ -38,6 +240,7 @@ export default function StudentDashboard() {
       })
       .catch((err) => console.error("Dashboard fetch error:", err));
   }, [id]);
+
 
   if (!data) return <div style={{ padding: 40 }}>Loading dashboard...</div>;
 
@@ -58,26 +261,35 @@ export default function StudentDashboard() {
         }}
       >
         <button
-          onClick={() => {
-            localStorage.clear();
-            sessionStorage.clear();
-            window.location.href = "/login";
-          }}
-          style={{
-            position: "absolute",
-            right: 30,
-            top: 25,
-            background: "rgba(255,255,255,0.2)",
-            border: "none",
-            color: "white",
-            borderRadius: 8,
-            padding: "8px 16px",
-            cursor: "pointer",
-            fontWeight: 600,
-          }}
-        >
-          Logout
-        </button>
+  onClick={() => {
+    localStorage.clear();
+    sessionStorage.clear();
+    window.location.href = "/login";
+  }}
+  style={{
+    position: "absolute",
+    right: 30,
+    top: 25,
+    background: "linear-gradient(135deg, #1e3c72 0%, #2a5298 100%)",
+    border: "none",
+    color: "white",
+    borderRadius: 8,
+    padding: "10px 18px",
+    cursor: "pointer",
+    fontWeight: 600,
+    boxShadow: "0 4px 10px rgba(0,0,0,0.2)",
+    transition: "0.3s",
+  }}
+  onMouseEnter={(e) =>
+    (e.target.style.boxShadow = "0 6px 14px rgba(0,0,0,0.4)")
+  }
+  onMouseLeave={(e) =>
+    (e.target.style.boxShadow = "0 4px 10px rgba(0,0,0,0.2)")
+  }
+>
+  Logout
+</button>
+
 
         <h1 style={{ fontSize: "2.8em", fontWeight: 800, margin: 0, textShadow: "2px 2px 6px rgba(0,0,0,0.3)" }}>
           Welcome, {student.name}
@@ -94,13 +306,51 @@ export default function StudentDashboard() {
         <div>
           {/* Profile */}
           <div style={cardStyle}>
-            <h2>🎓 Profile Overview</h2>
-            <p><b>Student ID:</b> {student.id}</p>
-            <p><b>CGPA:</b> {student.cgpa}</p>
-            <p><b>Hometown:</b> {student.hometown}</p>
-            <p><b>Address:</b> {student.current_address}</p>
-            <p><b>Languages Known:</b> {(student.languages_known || []).join(", ")}</p>
-          </div>
+  <h2>🎓 Profile Overview</h2>
+
+  {/* 🖼 Student Image (add this here) */}
+  {/* 🖼 Student Image */}
+  <img
+  src={`/images/${(student.name || "default").toLowerCase()}.jpg`}
+  alt={student.name}
+  style={{
+    width: "120px",
+    height: "120px",
+    borderRadius: "50%",
+    objectFit: "cover",
+    display: "block",
+    margin: "15px auto",
+    border: "4px solid #4b6cb7",
+    boxShadow: "0 0 12px rgba(75,108,183,0.3)",
+    transition: "all 0.3s ease",
+  }}
+  onMouseEnter={(e) => {
+    e.target.style.transform = "scale(1.08)";
+    e.target.style.boxShadow = "0 0 25px rgba(75,108,183,0.6)";
+  }}
+  onMouseLeave={(e) => {
+    e.target.style.transform = "scale(1)";
+    e.target.style.boxShadow = "0 0 12px rgba(75,108,183,0.3)";
+  }}
+  onError={(e) => {
+    // Fallback logic for missing images
+    const name = (student.name || "").toLowerCase();
+    if (name === "rahul") e.target.src = "/images/rahul.jpg";
+    else if (name === "aarav") e.target.src = "/images/aarav.jpg";
+    else e.target.src = "/images/kavya.jpg";
+  }}
+/>
+
+
+
+  {/* existing details below */}
+  <p><b>Student ID:</b> {student.id}</p>
+  <p><b>CGPA:</b> {student.cgpa}</p>
+  <p><b>Hometown:</b> {student.hometown}</p>
+  <p><b>Address:</b> {student.current_address}</p>
+  <p><b>Languages Known:</b> {(student.languages_known || []).join(", ")}</p>
+</div>
+
 
           {/* Timetable */}
           <div style={cardStyle}>
@@ -128,7 +378,16 @@ export default function StudentDashboard() {
 
           {/* Library */}
           <div style={cardStyle}>
-            <h2>📚 Library Records</h2>
+            <h2>
+  📚 Library Records{" "}
+  <span
+    onClick={handleLibraryHover}
+    style={{ fontSize: 14, color: "#4b6cb7", cursor: "pointer", marginLeft: 8 }}
+  >
+    (view details)
+  </span>
+</h2>
+
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead>
                 <tr style={{ background: "#eef2ff" }}>
@@ -199,7 +458,21 @@ export default function StudentDashboard() {
 
           {/* Attendance Overview */}
           <div style={cardStyle}>
-            <h2>📅 Attendance Overview</h2>
+            <h2>
+  📅 Attendance Overview{" "}
+  <span
+    onClick={handleAttendanceHover}
+    style={{
+      fontSize: 14,
+      color: "#4b6cb7",
+      cursor: "pointer",
+      marginLeft: 8,
+    }}
+  >
+    (hover for details)
+  </span>
+</h2>
+
             <p>Total Attendance: <b>88%</b></p>
             <div style={{ background: "#eee", borderRadius: 10, height: 15 }}>
               <div
@@ -218,7 +491,16 @@ export default function StudentDashboard() {
 
           {/* 🧾 Assignment Tracker */}
           <div style={cardStyle}>
-            <h2>🧾 Assignment Tracker</h2>
+            <h2>
+  🧾 Assignment Tracker{" "}
+  <span
+    onClick={handleAssignmentHover}
+    style={{ fontSize: 14, color: "#4b6cb7", cursor: "pointer", marginLeft: 8 }}
+  >
+    (view details)
+  </span>
+</h2>
+
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead>
                 <tr style={{ background: "#eef2ff" }}>
@@ -388,26 +670,33 @@ export default function StudentDashboard() {
 
           {/* 🎯 Semester Performance */}
           <div style={cardStyle}>
-            <h2>🎯 Semester-wise Performance</h2>
-            <div style={{ width: "100%", height: 250 }}>
-              <ResponsiveContainer>
-                <BarChart
-                  data={[
-                    { semester: "Sem 1", cgpa: 8.2 },
-                    { semester: "Sem 2", cgpa: 8.4 },
-                    { semester: "Sem 3", cgpa: 8.0 },
-                    { semester: "Sem 4", cgpa: 8.6 },
-                  ]}
-                >
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="semester" />
-                  <YAxis />
-                  <Tooltip />
-                  <Bar dataKey="cgpa" fill="#7b61ff" radius={[6, 6, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
+  <h2>🎯 Semester-wise Performance</h2>
+  <div style={{ width: "100%", height: 250 }}>
+    <ResponsiveContainer>
+      <BarChart
+        data={[
+          { semester: "Sem 1", cgpa: 8.2 },
+          { semester: "Sem 2", cgpa: 8.4 },
+          { semester: "Sem 3", cgpa: 8.0 },
+          { semester: "Sem 4", cgpa: 8.6 },
+        ]}
+        onClick={(e) =>
+          e?.activeLabel && handleSemesterClick(e.activeLabel)
+        }
+      >
+        <CartesianGrid strokeDasharray="3 3" />
+        <XAxis dataKey="semester" />
+        <YAxis />
+        <Tooltip />
+        <Bar dataKey="cgpa" fill="#7b61ff" radius={[6, 6, 0, 0]} />
+      </BarChart>
+    </ResponsiveContainer>
+  </div>
+  <p style={{ fontSize: 13, color: "#666", marginTop: 5 }}>
+    💡 Click on any semester bar to view detailed marks.
+  </p>
+</div>
+
 
           {/* 🧠 Skill Proficiency */}
           <div style={cardStyle}>

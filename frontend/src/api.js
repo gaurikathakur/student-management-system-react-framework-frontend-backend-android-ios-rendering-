@@ -1,4 +1,5 @@
-const API_BASE = "http://127.0.0.1:5000/api";
+const API_BASE = "https://student-sms-backend-6.onrender.com/api";
+
 
 export async function getJSON(path) {
   const res = await fetch(API_BASE + path, {
